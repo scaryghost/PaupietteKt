@@ -22,6 +22,10 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
 dependencies {
     // Align versions of all Kotlin components
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
@@ -29,6 +33,7 @@ dependencies {
     // Use the Kotlin JDK 8 standard library.
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
-    testImplementation("io.kotest:kotest-runner-junit5-jvm:4.0.2")
+    testImplementation("io.kotest:kotest-runner-console:4.0.2")
     testImplementation("io.kotest:kotest-property-jvm:4.0.2")
+    testImplementation("io.kotest:kotest-assertions-core-jvm:4.0.2")
 }
