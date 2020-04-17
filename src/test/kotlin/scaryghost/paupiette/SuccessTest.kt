@@ -1,13 +1,17 @@
 package scaryghost.paupiette
 
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.data.forAll
+import io.kotest.data.row
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeSameInstanceAs
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.int
 import io.kotest.property.arbitrary.next
 import io.kotest.property.arbitrary.string
+import java.lang.IllegalArgumentException
 
 class SuccessTest : StringSpec({
     "filter returns Failure if predicate faults" {
@@ -44,7 +48,6 @@ class SuccessTest : StringSpec({
         val expected = arbInt.next()
         val result = Success(arbInt.next()).map{ expected }
 
-        result::class shouldBe Success::class
         (result as Success).value shouldBe expected
     }
 
@@ -52,7 +55,51 @@ class SuccessTest : StringSpec({
         val expected = Arb.string().next()
         val result = Success(Arb.int().next()).map{ expected }
 
-        result::class shouldBe Success::class
         (result as Success).value shouldBe expected
+    }
+
+    "recover does not apply function" {
+        val arbString = Arb.string()
+        val expected = arbString.next()
+
+        shouldNotThrowAny {
+            Success(expected).recover<String> {
+                throw IllegalArgumentException()
+            }
+        }
+
+        val result = Success(expected).recover {arbString.next()}
+        (result as Success).value shouldBe expected
+    }
+
+    "recover throws exception if U cast fails" {
+        shouldThrow<ClassCastException> {
+            Success(Arb.string().next()).recover {
+                Arb.int().next()
+            }
+        }
+    }
+
+    "recoverWith does not apply function" {
+        val arbString = Arb.string()
+
+        forAll(
+            row(Success(arbString.next())),
+            row(Failure<String>(NullPointerException()))
+        ) { fallbackResult ->
+            val expected = arbString.next()
+
+            val result = Success(expected).recoverWith { fallbackResult }
+            (result as Success).value shouldBe expected
+        }
+    }
+
+    "recoverWith returns Failure if U cast fails" {
+        val result = Success(Arb.string().next())
+                .recoverWith<Int> {
+                    Try { Arb.int().next() }
+                }
+
+        assertFailure(result, ClassCastException::class)
     }
 })

@@ -14,6 +14,19 @@ sealed class Try<out T> {
     abstract fun flatten(): Try<T>
     abstract fun <U> map(f: (T) -> U): Try<U>
     abstract fun <U> flatMap(f: (T) -> Try<U>): Try<U>
+
+    inline fun <reified U> recover(f: (Throwable) -> U): Try<U> {
+        return when (this) {
+            is Success<*> -> Success(this.value as U)
+            is Failure<*> -> Success(f(this.exception))
+        }
+    }
+    inline fun <reified U> recoverWith(f: (Throwable) -> Try<U>): Try<U> {
+        return when (this) {
+            is Success<*> -> Try { this.value as U }
+            is Failure<*> -> f(this.exception)
+        }
+    }
 }
 
 data class Success<out T>(val value: T) : Try<T>() {
@@ -63,5 +76,4 @@ data class Failure<out T>(val exception: Throwable) : Try<T>() {
     override fun <U> map(f: (T) -> U): Try<U> = Failure(exception)
 
     override fun <U> flatMap(f: (T) -> Try<U>): Try<U> = Failure(exception)
-
 }
