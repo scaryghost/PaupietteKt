@@ -27,6 +27,8 @@ sealed class Try<out T> {
             is Failure<*> -> f(this.exception)
         }
     }
+
+    abstract fun <U> transform(s: (T) -> Try<U>, f: (Throwable) -> Try<U>): Try<U>
 }
 
 data class Success<out T>(val value: T) : Try<T>() {
@@ -61,6 +63,8 @@ data class Success<out T>(val value: T) : Try<T>() {
             else -> this
         }
     }
+
+    override fun <U> transform(s: (T) -> Try<U>, f: (Throwable) -> Try<U>): Try<U> = s(value)
 }
 
 data class Failure<out T>(val exception: Throwable) : Try<T>() {
@@ -76,4 +80,6 @@ data class Failure<out T>(val exception: Throwable) : Try<T>() {
     override fun <U> map(f: (T) -> U): Try<U> = Failure(exception)
 
     override fun <U> flatMap(f: (T) -> Try<U>): Try<U> = Failure(exception)
+
+    override fun <U> transform(s: (T) -> Try<U>, f: (Throwable) -> Try<U>): Try<U> = f(exception)
 }

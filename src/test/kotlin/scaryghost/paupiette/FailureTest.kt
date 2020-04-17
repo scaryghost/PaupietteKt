@@ -75,4 +75,15 @@ class FailureTest : StringSpec({
             result shouldBeSameInstanceAs expected
         }
     }
+
+
+    "transform calls f" {
+        val arbString = Arb.string()
+        val expected = Success(arbString.next())
+
+        val result = original.transform(
+                { Success(arbString.next()) }, { expected }
+        )
+        result shouldBeSameInstanceAs expected
+    }
 })

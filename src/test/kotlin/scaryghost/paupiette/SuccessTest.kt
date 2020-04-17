@@ -102,4 +102,14 @@ class SuccessTest : StringSpec({
 
         assertFailure(result, ClassCastException::class)
     }
+
+
+    "transform calls s" {
+        val expected = Success(Arb.int().next())
+
+        val result = Success(Arb.string().next()).transform(
+                { expected }, { Failure(RuntimeException()) }
+        )
+        result shouldBeSameInstanceAs expected
+    }
 })
